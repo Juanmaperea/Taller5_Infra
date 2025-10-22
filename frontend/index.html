@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gestión de Estudiantes</title>
+  <style>
+    body { font-family: Arial; margin: 40px; background: #f7f7f7; }
+    input, button { margin: 5px; padding: 8px; }
+    button { background-color: #0078d7; color: white; border: none; cursor: pointer; padding: 8px 12px; border-radius: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 8px; border: 1px solid #ddd; text-align: left; }
+    th { background: #0078d7; color: #fff; }
+  </style>
+</head>
+<body>
+  <h2>Gestión de Estudiantes</h2>
+  <div>
+    <input id="name" placeholder="Nombre">
+    <input id="age" type="number" placeholder="Edad">
+    <input id="color" placeholder="Color favorito">
+    <button onclick="saveStudent()">Guardar</button>
+    <button id="cancelEdit" onclick="cancelEdit()" style="display:none;background:#888;">Cancelar</button>
+  </div>
+  <table>
+    <thead><tr><th>ID</th><th>Nombre</th><th>Edad</th><th>Color</th><th>Acciones</th></tr></thead>
+    <tbody id="list"></tbody>
+  </table>
+  <script>
+    // Use relative path; Nginx will proxy /api to the backend
+    const apiUrl = "/api/students";
+    let editingId = null;
+
+    async function loadStudents() {
+      const res = await fetch(apiUrl);
+      const data = await res.json();
+      const tbody = document.getElementById("list");
+      tbody.innerHTML = "";
+      data.forEach(s => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${s.id}</td><td>${s.name}</td><td>${s.age}</td><td>${s.favorite_color}</td>
+          <td>
+            <button onclick="startEdit(${s.id}, '${s.name}', ${s.age}, '${s.favorite_color}')">Editar</button>
+            <button onclick="del(${s.id})" style="background:#e74c3c;">Eliminar</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function saveStudent() {
+      const name = document.getElementById("name").value;
+      const age = parseInt(document.getElementById("age").value);
+      const color = document.getElementById("color").value;
+      if (!name || !age || !color) { alert("Completa todos los campos"); return; }
+      const body = JSON.stringify({ name, age, favorite_color: color });
+      if (editingId) {
+        await fetch(`${apiUrl}/${editingId}`, { method: "PUT", headers: {"Content-Type":"application/json"}, body });
+        editingId = null;
+        document.getElementById("cancelEdit").style.display = "none";
+      } else {
+        await fetch(apiUrl, { method: "POST", headers: {"Content-Type":"application/json"}, body });
+      }
+      clearForm();
+      loadStudents();
+    }
+
+    function startEdit(id, name, age, color) {
+      editingId = id;
+      document.getElementById("name").value = name;
+      document.getElementById("age").value = age;
+      document.getElementById("color").value = color;
+      document.getElementById("cancelEdit").style.display = "inline";
+    }
+
+    function cancelEdit() {
+      editingId = null;
+      clearForm();
+      document.getElementById("cancelEdit").style.display = "none";
+    }
+
+    async function del(id) {
+      if (confirm("Eliminar?")) {
+        await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
+        loadStudents();
+      }
+    }
+
+    function clearForm() {
+      document.getElementById("name").value = "";
+      document.getElementById("age").value = "";
+      document.getElementById("color").value = "";
+    }
+
+    loadStudents();
+  </script>
+</body>
+</html>
