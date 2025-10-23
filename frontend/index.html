@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Gestión de Estudiantes - Frontend</title>
+  <title>Gestión de Estudiantes</title>
   <style>
     body { font-family: Arial; margin: 40px; background: #f7f7f7; }
     input, button { margin: 5px; padding: 8px; }
@@ -26,7 +26,8 @@
     <tbody id="list"></tbody>
   </table>
   <script>
-    const apiUrl = "http://localhost:8000/students";
+    // Use relative path; Nginx will proxy /api to the backend
+    const apiUrl = "/api/students";
     let editingId = null;
 
     async function loadStudents() {

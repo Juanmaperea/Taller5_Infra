@@ -8,6 +8,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Students API (Postgres)")
 
+# Keep CORS permissive for now (reverse proxy avoids cross-origin in production)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,4 +17,4 @@ app.add_middleware(
     allow_credentials=True,
 )
 
-app.include_router(student_controller.router)
+app.include_router(student_controller.router, prefix="/api/students")
